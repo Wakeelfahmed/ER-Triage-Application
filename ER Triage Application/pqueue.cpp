@@ -1,138 +1,241 @@
 // CMSC 341 - Fall 2023 - Project 3
 #include "pqueue.h"
+
 PQueue::PQueue(prifn_t priFn, HEAPTYPE heapType, STRUCTURE structure)
 {
-	m_heap = nullptr;
-	m_size = 0;
-	m_priorFunc = priFn;
-	m_heapType = heapType;
-	m_structure = structure;
+    m_heap = nullptr;
+    m_size = 0;
+    m_priorFunc = priFn;
+    m_heapType = heapType;
+    m_structure = structure;
 }
-PQueue::~PQueue() { clear(); }
-void PQueue::clear() {
-	if (m_size > 0) {
-		clear(m_heap);
-		m_heap = nullptr;
-		m_size = 0;
-	}
+
+PQueue::~PQueue()
+{
+    clear();
 }
-void PQueue::clear(Node* pos) {
-	if (pos != nullptr) {
-		clear(pos->m_left);
-		clear(pos->m_right);
-		delete pos;
-	}
+
+void PQueue::clear()
+{
+    while (m_size > 0)
+    {
+        getNextPatient();
+    }
 }
+
 PQueue::PQueue(const PQueue& rhs)
 {
-	m_heap = nullptr;
-	m_size = 0;
-	m_priorFunc = rhs.m_priorFunc;
-	m_heapType = rhs.m_heapType;
-	m_structure = rhs.m_structure;
+    m_heap = nullptr;
+    m_size = 0;
+    m_priorFunc = rhs.m_priorFunc;
+    m_heapType = rhs.m_heapType;
+    m_structure = rhs.m_structure;
 
-	if (rhs.m_size > 0) {
-		m_heap = new Node(rhs.m_heap->getPatient());
-		m_heap->m_left = clone(rhs.m_heap->m_left);
-		m_heap->m_right = clone(rhs.m_heap->m_right);
-		m_size = rhs.m_size;
-	}
-}
-PQueue& PQueue::operator=(const PQueue& rhs) {
-	if (this != &rhs) {
-		clear();
-		m_priorFunc = rhs.m_priorFunc;
-		m_heapType = rhs.m_heapType;
-		m_structure = rhs.m_structure;
+    // Copy patients from the other queue
+    PQueue tempQueue(rhs.m_priorFunc, rhs.m_heapType, rhs.m_structure);
+    while (rhs.m_size > 0)
+    {
+        tempQueue.insertPatient(rhs.getNextPatient());
+    }
 
-		if (rhs.m_size > 0) {
-			m_heap = new Node(rhs.m_heap->getPatient());
-			m_heap->m_left = clone(rhs.m_heap->m_left);
-			m_heap->m_right = clone(rhs.m_heap->m_right);
-			m_size = rhs.m_size;
-		}
-	}
-	return *this;
+    // Swap the temporary queue with the current queue
+    swap(m_heap, tempQueue.m_heap);
+    swap(m_size, tempQueue.m_size);
 }
-void PQueue::mergeWithQueue(PQueue& rhs) {
-	if (m_priorFunc != rhs.m_priorFunc || m_structure != rhs.m_structure)
-		throw std::domain_error("Cannot merge with different priority functions or structures");
 
-	if (this == &rhs)
-		throw std::invalid_argument("Cannot merge a queue with itself");
+PQueue& PQueue::operator=(const PQueue& rhs)
+{
+    if (this != &rhs)
+    {
+        clear(); // Clear the current queue
 
-	m_heap = merge(m_heap, rhs.m_heap, m_priorFunc, m_heapType, m_structure);
-	m_size += rhs.m_size;
+        m_priorFunc = rhs.m_priorFunc;
+        m_heapType = rhs.m_heapType;
+        m_structure = rhs.m_structure;
 
-	rhs.clear();
-}
-void PQueue::insertPatient(const Patient& patient) {
-	Node* newPatient = new Node(input);
-	m_heap = merge(m_heap, newPatient, m_priorFunc, m_heapType, m_structure);
-	m_size++;
-}
-int PQueue::numPatients() const { return m_size; }
-prifn_t PQueue::getPriorityFn() const { return m_priorFunc; }
-Patient PQueue::getNextPatient() {
-	if (m_size == 0)
-		throw std::out_of_range("Queue is empty");
+        // Copy patients from the other queue
+        PQueue tempQueue(rhs.m_priorFunc, rhs.m_heapType, rhs.m_structure);
+        while (rhs.m_size > 0)
+        {
+            tempQueue.insertPatient(rhs.getNextPatient());
+        }
 
-	Node* oldHeap = m_heap;
-	m_heap = merge(m_heap->m_left, m_heap->m_right, m_priorFunc, m_heapType, m_structure);
-	Patient nextPatient = oldHeap->getPatient();
-	delete oldHeap;
-	m_size--;
+        // Swap the temporary queue with the current queue
+        swap(m_heap, tempQueue.m_heap);
+        swap(m_size, tempQueue.m_size);
+    }
 
-	return nextPatient;
+    return *this;
 }
-void PQueue::setPriorityFn(prifn_t priFn, HEAPTYPE heapType) {
-	if (m_priorFunc != priFn || m_heapType != heapType) {
-		m_priorFunc = priFn;
-		m_heapType = heapType;
-		m_heap = rebuildHeap(m_heap, m_priorFunc, m_heapType, m_structure);
-	}
+
+void PQueue::mergeWithQueue(PQueue& rhs)
+{
+    // Merge the current queue with the other queue
+    while (rhs.m_size > 0)
+    {
+        insertPatient(rhs.getNextPatient());
+    }
 }
-void PQueue::setStructure(STRUCTURE structure) {
-	if (m_structure != structure) {
-		m_structure = structure;
-		m_heap = rebuildHeap(m_heap, m_priorFunc, m_heapType, m_structure);
-	}
+
+void PQueue::insertPatient(const Patient& patient)
+{
+    Node* newNode = new Node(patient);
+
+    // Merge the new node with the current queue
+    PQueue tempQueue(m_priorFunc, m_heapType, m_structure);
+    tempQueue.m_heap = newNode;
+    tempQueue.m_size = 1;
+
+    mergeWithQueue(tempQueue);
 }
-STRUCTURE PQueue::getStructure() const { return m_structure; }
-HEAPTYPE PQueue::getHeapType() const { return m_heapType; }
-void PQueue::printPatientQueue() const {
-	printPatientQueue(m_heap);
-	std::cout << std::endl;
+
+int PQueue::numPatients() const
+{
+    return m_size;
 }
-void PQueue::dump() const {
-	if (m_size == 0)
-		cout << "Empty heap.\n";
-	else
-		dump(m_heap);
-	cout << endl;
+
+prifn_t PQueue::getPriorityFn() const
+{
+    return m_priorFunc;
 }
-void PQueue::dump(Node* pos) const {
-	if (pos != nullptr) {
-		cout << "(";
-		dump(pos->m_left);
-		if (m_structure == SKEW)
-			cout << m_priorFunc(pos->m_patient) << ":" << pos->m_patient.getPatient();
-		else
-			cout << m_priorFunc(pos->m_patient) << ":" << pos->m_patient.getPatient() << ":" << pos->m_npl;
-		dump(pos->m_right);
-		cout << ")";
-	}
+
+Patient PQueue::getNextPatient()
+{
+    if (m_size == 0)
+    {
+        throw runtime_error("The queue is empty.");
+    }
+
+    Patient rootPatient = m_heap->getPatient();
+
+    PQueue leftQueue(m_priorFunc, m_heapType, m_structure);
+    PQueue rightQueue(m_priorFunc, m_heapType, m_structure);
+
+    if (m_structure == SKEW)
+    {
+        leftQueue.m_heap = m_heap->m_left;
+        rightQueue.m_heap = m_heap->m_right;
+    }
+    else if (m_structure == LEFTIST)
+    {
+        leftQueue.m_heap = m_heap->m_left;
+        rightQueue.m_heap = m_heap->m_right;
+    }
+
+    delete m_heap;
+
+    mergeWithQueue(leftQueue);
+    mergeWithQueue(rightQueue);
+
+    return rootPatient;
 }
-ostream& operator<<(ostream& sout, const Patient& patient) {
-	sout << patient.getPatient()
-		<< ", temperature: " << patient.getTemperature()
-		<< ", oxygen: " << patient.getOxygen()
-		<< ", respiratory: " << patient.getRR()
-		<< ", blood pressure: " << patient.getBP()
-		<< ", nurse opinion: " << patient.getOpinion();
-	return sout;
+
+void PQueue::setPriorityFn(prifn_t priFn, HEAPTYPE heapType)
+{
+    m_priorFunc = priFn;
+    m_heapType = heapType;
+
+    PQueue tempQueue(m_priorFunc, m_heapType, m_structure);
+    while (m_size > 0)
+    {
+        tempQueue.insertPatient(getNextPatient());
+    }
+
+    swap(m_heap, tempQueue.m_heap);
+    swap(m_size, tempQueue.m_size);
 }
-ostream& operator<<(ostream& sout, const Node& node) {
-	sout << node.getPatient();
-	return sout;
+
+void PQueue::setStructure(STRUCTURE structure)
+{
+    if (m_structure == structure)
+    {
+        return;
+    }
+
+    PQueue tempQueue(m_priorFunc, m_heapType, structure);
+    while (m_size > 0)
+    {
+        tempQueue.insertPatient(getNextPatient());
+    }
+
+    swap(m_heap, tempQueue.m_heap);
+    swap(m_size, tempQueue.m_size);
+    m_structure = structure;
+}
+
+STRUCTURE PQueue::getStructure() const
+{
+    return m_structure;
+}
+
+HEAPTYPE PQueue::getHeapType() const
+{
+    return m_heapType;
+}
+
+void PQueue::printPatientQueue() const
+{
+    if (m_size == 0)
+    {
+        cout << "The queue is empty." << endl;
+        return;
+    }
+
+    // Create a temporary queue to preserve the original queue
+    PQueue tempQueue(m_priorFunc, m_heapType, m_structure);
+    tempQueue.mergeWithQueue(const_cast<PQueue&>(*this)); // const_cast is used to call mergeWithQueue on a const object
+
+    // Print patients in order without affecting the original queue
+    int position = 1;
+    while (tempQueue.m_size > 0)
+    {
+        Patient patient = tempQueue.getNextPatient();
+        cout << "[" << position++ << "] " << patient << endl;
+    }
+}
+
+
+void PQueue::dump() const
+{
+    if (m_size == 0)
+    {
+        cout << "Empty heap.\n";
+    }
+    else
+    {
+        dump(m_heap);
+    }
+    cout << endl;
+}
+
+void PQueue::dump(Node* pos) const
+{
+    if (pos != nullptr)
+    {
+        cout << "(";
+        dump(pos->m_left);
+        if (m_structure == SKEW)
+            cout << m_priorFunc(pos->m_patient) << ":" << pos->m_patient.getPatient();
+        else
+            cout << m_priorFunc(pos->m_patient) << ":" << pos->m_patient.getPatient() << ":" << pos->m_npl;
+        dump(pos->m_right);
+        cout << ")";
+    }
+}
+
+ostream& operator<<(ostream& sout, const Patient& patient)
+{
+    sout << patient.getPatient()
+        << ", temperature: " << patient.getTemperature()
+        << ", oxygen: " << patient.getOxygen()
+        << ", respiratory: " << patient.getRR()
+        << ", blood pressure: " << patient.getBP()
+        << ", nurse opinion: " << patient.getOpinion();
+    return sout;
+}
+
+ostream& operator<<(ostream& sout, const Node& node)
+{
+    sout << node.getPatient();
+    return sout;
 }

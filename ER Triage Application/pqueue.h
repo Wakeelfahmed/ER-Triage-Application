@@ -12,8 +12,8 @@ class Tester; // forward declaration (for test functions)
 class PQueue; // forward declaration
 class Patient;// forward declaration
 #define EMPTY Patient() // This is an empty object (invalid patient)
-enum HEAPTYPE {MINHEAP, MAXHEAP};
-enum STRUCTURE {SKEW, LEFTIST};
+enum HEAPTYPE { MINHEAP, MAXHEAP };
+enum STRUCTURE { SKEW, LEFTIST };
 // Priority function pointer type
 typedef int (*prifn_t)(const Patient&);
 
@@ -32,43 +32,43 @@ const int MAXOPINION = 10;  // 1 is highest priotity
 // patient class
 //
 class Patient {
-    public:
+public:
     friend class Grader; // for grading purposes
     friend class Tester; // contains test functions
     friend class PQueue;
     Patient() {
         // This is an empty object since name is empty
         m_patient = ""; m_temperature = 37; m_oxygen = 100;
-        m_RR = 20;m_BP = 100;m_opinion=10;
+        m_RR = 20; m_BP = 100; m_opinion = 10;
     }
     Patient(string name, int temp, int ox, int rr, int bp, int op) {
-        if ( (temp < MINTEMP || temp > MAXTEMP) || 
-        (ox < MINOX || ox > MAXOX) || (rr < MINRR || rr > MAXRR) || 
-        (bp < MINBP || bp > MAXBP) || (op < 1 || op > 10)){
+        if ((temp < MINTEMP || temp > MAXTEMP) ||
+            (ox < MINOX || ox > MAXOX) || (rr < MINRR || rr > MAXRR) ||
+            (bp < MINBP || bp > MAXBP) || (op < 1 || op > 10)) {
             // create an empty object
             m_patient = ""; m_temperature = 37; m_oxygen = 100;
-            m_RR = 20; m_BP = 100;m_opinion=10;
+            m_RR = 20; m_BP = 100; m_opinion = 10;
         }
-        else{
+        else {
             m_patient = name; m_temperature = temp; m_oxygen = ox;
-            m_RR = rr; m_BP = bp;m_opinion=op;
+            m_RR = rr; m_BP = bp; m_opinion = op;
         }
     }
-    string getPatient() const {return m_patient;}
-    int getTemperature() const {return m_temperature;}
-    int getOxygen() const {return m_oxygen;}
-    int getRR() const {return m_RR;}
-    int getBP() const {return m_BP;}
-    int getOpinion() const {return m_opinion;}
-    void setPatient(string name) {m_patient=name;}
-    void setTemperature(int val) {m_temperature=val;}
-    void setOxygen(int val) {m_oxygen=val;}
-    void setRR(int val) {m_RR=val;}
-    void setBP(int val) {m_BP=val;}
-    void setOpinion(int val) {m_opinion=val;}
+    string getPatient() const { return m_patient; }
+    int getTemperature() const { return m_temperature; }
+    int getOxygen() const { return m_oxygen; }
+    int getRR() const { return m_RR; }
+    int getBP() const { return m_BP; }
+    int getOpinion() const { return m_opinion; }
+    void setPatient(string name) { m_patient = name; }
+    void setTemperature(int val) { m_temperature = val; }
+    void setOxygen(int val) { m_oxygen = val; }
+    void setRR(int val) { m_RR = val; }
+    void setBP(int val) { m_BP = val; }
+    void setOpinion(int val) { m_opinion = val; }
     // Overloaded assignment operator
-    const Patient & operator=(const Patient& rhs){
-        if (this != &rhs){
+    const Patient& operator=(const Patient& rhs) {
+        if (this != &rhs) {
             m_patient = rhs.m_patient;
             m_temperature = rhs.m_temperature;
             m_oxygen = rhs.m_oxygen;
@@ -79,18 +79,18 @@ class Patient {
         return *this;
     }
     // Overloaded equality operator
-    bool operator==(const Patient & rhs) const {
+    bool operator==(const Patient& rhs) const {
         return ((m_patient == rhs.m_patient) &&
-                (m_temperature == rhs.m_temperature) &&
-                (m_oxygen == rhs.m_oxygen) &&
-                (m_RR == rhs.m_RR) &&
-                (m_BP == rhs.m_BP) &&
-                (m_opinion == rhs.m_opinion));
+            (m_temperature == rhs.m_temperature) &&
+            (m_oxygen == rhs.m_oxygen) &&
+            (m_RR == rhs.m_RR) &&
+            (m_BP == rhs.m_BP) &&
+            (m_opinion == rhs.m_opinion));
     }
     // Overloaded insertion operator
     friend ostream& operator<<(ostream& sout, const Patient& patient);
 
-    private:
+private:
     string m_patient;  // Patient's name, no need to be unique
     int m_temperature; // Body temperature, celsius
     int m_oxygen;      // Level of oxygen saturation (SpO2), percentage
@@ -101,27 +101,27 @@ class Patient {
 
 class Node {
     // this is a node in the skew/leftist heap
-    public:
+public:
     friend class Grader; // for grading purposes
     friend class Tester; // contains test functions
     friend class PQueue;
-    Node(Patient patient) {  
+    Node(Patient patient) {
         m_patient = patient;
         m_right = nullptr;
         m_left = nullptr;
         m_npl = 0;
     }
-    Patient getPatient() const {return m_patient;}
-    void setNPL(int npl) {m_npl = npl;}
-    int getNPL() const {return m_npl;}
+    Patient getPatient() const { return m_patient; }
+    void setNPL(int npl) { m_npl = npl; }
+    int getNPL() const { return m_npl; }
 
     // Overloaded insertion operator
     friend ostream& operator<<(ostream& sout, const Node& node);
 
-    private:
+private:
     Patient m_patient;   // Patient information
-    Node *m_right;       // Right child
-    Node *m_left;        // Left child
+    Node* m_right;       // Right child
+    Node* m_left;        // Left child
     int m_npl;           // null path length for leftist heap
 };
 
@@ -153,110 +153,28 @@ public:
     void dump() const;  // For debugging purposes.
 
 private:
-    Node * m_heap;          // Pointer to root of skew heap
+    Node* m_heap;          // Pointer to root of skew heap
     int m_size;             // Current size of the heap
     prifn_t m_priorFunc;    // Function to compute priority
     HEAPTYPE m_heapType;    // either a MINHEAP or a MAXHEAP
     STRUCTURE m_structure;  // skew heap or leftist heap
 
-    void dump(Node *pos) const; // helper function for dump
+    void dump(Node* pos) const; // helper function for dump
 
     /******************************************
     * Private function declarations go here! *
     ******************************************/
-    Node* clone(Node* node) {
-        if (node == nullptr) {
-            return nullptr;
+    Patient peekNextPatient() const
+    {
+        if (m_size == 0)
+        {
+            throw runtime_error("The queue is empty.");
         }
 
-        Node* newNode = new Node(node->getPatient());
-        newNode->m_left = clone(node->m_left);
-        newNode->m_right = clone(node->m_right);
-
-        return newNode;
+        // Return the root patient without modifying the queue
+        return m_heap->getPatient();
     }
-    void clear(Node* pos);
-    void printPatientQueue(Node* pos) const {
-        if (pos != nullptr) {
-            std::cout << m_priorFunc(pos->m_patient) << ": " << pos->m_patient << std::endl;
-            printPatientQueue(pos->m_left);
-            printPatientQueue(pos->m_right);
-        }
-    }
-    Node* merge(Node* h1, Node* h2, prifn_t priFn, HEAPTYPE heapType, STRUCTURE structure) {
-        if (h1 == nullptr) return h2;
-        if (h2 == nullptr) return h1;
 
-        if (heapType == MINHEAP && priFn(h1->getPatient()) > priFn(h2->getPatient())) {
-            std::swap(h1, h2);
-        }
-        else if (heapType == MAXHEAP && priFn(h1->getPatient()) < priFn(h2->getPatient())) {
-            std::swap(h1, h2);
-        }
-
-        if (structure == SKEW) {
-            std::swap(h1->m_left, h1->m_right);
-            h1->m_left = merge(h1->m_left, h2, priFn, heapType, structure);
-        }
-        else {  // LEFTIST
-            h1->m_left = merge(h1->m_left, h2, priFn, heapType, structure);
-            if (h1->m_left == nullptr || h1->m_right != nullptr && h1->m_left->getNPL() < h1->m_right->getNPL()) {
-                std::swap(h1->m_left, h1->m_right);
-            }
-            if (h1->m_right == nullptr) {
-                h1->setNPL(0);
-            }
-            else {
-                h1->setNPL(h1->m_right->getNPL() + 1);
-            }
-        }
-
-        return h1;
-    }
-    Node* rebuildHeap(Node* root, prifn_t priFn, HEAPTYPE heapType, STRUCTURE structure) {
-        if (root == nullptr) {
-            return nullptr;
-        }
-
-        Node* patientArray = toArray(root);
-        return buildHeap(patientArray, 0, m_size - 1, priFn, heapType, structure);
-    }
-    Node* toArray(Node* root) {
-        Node* patientArray = new Node[m_size];
-        int index = 0;
-        flatten(root, patientArray, index);
-        return patientArray;
-    }
-    void flatten(Node* root, Node* patientArray, int& index) {
-        if (root != nullptr) {
-            patientArray[index++] = *root;
-            flatten(root->m_left, patientArray, index);
-            flatten(root->m_right, patientArray, index);
-        }
-    }
-    Node* buildHeap(Node* patientArray, int left, int right, prifn_t priFn, HEAPTYPE heapType, STRUCTURE structure) {
-        if (left > right) {
-            return nullptr;
-        }
-
-        int mid = (left + right) / 2;
-        Node* newNode = new Node(patientArray[mid]);
-        newNode->m_left = buildHeap(patientArray, left, mid - 1, priFn, heapType, structure);
-        newNode->m_right = buildHeap(patientArray, mid + 1, right, priFn, heapType, structure);
-
-        if (structure == LEFTIST) {
-            if (newNode->m_left == nullptr || newNode->m_right != nullptr && newNode->m_left->getNPL() < newNode->m_right->getNPL()) {
-                std::swap(newNode->m_left, newNode->m_right);
-            }
-            if (newNode->m_right == nullptr) {
-                newNode->setNPL(0);
-            }
-            else {
-                newNode->setNPL(newNode->m_right->getNPL() + 1);
-            }
-        }
-
-        return newNode;
-    }
 };
+
 #endif
